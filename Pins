@@ -1,0 +1,22 @@
+Board#1 
+LM35 Temperature Sensor: RA0 (AN0)
+7-Segment Display (Data): PORTD (RD0-RD7)
+7-Segment Display (Selection): RA1, RA2, RA3 and PORTD (Scanning Method)
+4x4 Keypad: PORTB (RB0-RB7)
+UART (TX): RC6
+UART (RX): RC7
+Heater: RC5
+Fan/Cooler: RC2
+COM Pair: COM9-COM10
+
+Board#2 
+Step Motor: RB0, RB1, RB2, RB3 
+LDR (Lux): RA0 (AN0)
+Potentiometer (Position of light): RA1 (AN1)
+BMP180 (SCL): RC3
+BMP180 (SDA): RC4
+LCD (Data): PORTD (RD0-RD7)
+LCD (Control - RS/E): RE0, RE1
+UART (TX): RC6
+UART (RX): RC7
+COM Pair: COM6-COM7
