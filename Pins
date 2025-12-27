@@ -6,7 +6,7 @@ LM35 Temperature Sensor: RA0 (AN0)
 UART (TX): RC6
 UART (RX): RC7
 Heater: RC5
-Fan/Cooler: RC2
+Fan/Cooler: RA4(T0CKI)
 COM Pair: COM9-COM10
 
 Board#2 
