@@ -1,13 +1,13 @@
-🏠 Home Automation System
+# 🏠 Home Automation System
 A comprehensive microcontroller-based home automation project developed using PIC16F877A, featuring intelligent temperature control and automated curtain management.
 
-📋 Project Overview
+# 📋 Project Overview
 This project implements a dual-board home automation system that manages:
 Board #1: Air conditioning system with temperature control
 Board #2: Automated curtain control based on light intensity
 The system operates in both autonomous and manual modes, providing flexible control through a Python-based API interface.
 
-👥 Team Members
+# 👥 Team Members
 151220212123
 Yiğit DOMBAYLI
 Electrical & Electronics Engineering
@@ -32,7 +32,7 @@ Course: Introduction to Microcomputers
 
 Date: December 2025
 
-🎯 Features
+# 🎯 Features
 Board #1 - Air Conditioner System
 Temperature Monitoring: Real-time ambient temperature reading via LM35 sensor
 Automatic Climate Control: Intelligent heating/cooling based on desired temperature
@@ -53,7 +53,7 @@ Manual: Direct user control via GUI
 Real-time Monitoring: Live data synchronization with microcontrollers
 User-Friendly GUI: Intuitive interface for system management
 
-🛠️ Technical Stack
+# 🛠️ Technical Stack
 Hardware
 Microcontroller: PIC16F877A
 Sensors: LM35 (temperature), LDR (light), BMP180 (pressure/temperature)
@@ -69,8 +69,8 @@ Board #2: Assembly language (MPLAB X IDE v6.25)
 API: Python 3.14.2
 Virtual Serial Ports: com0com (null-modem emulator)
 
-📦 Installation & Setup Prerequisites
-# Required Software
+# 📦 Installation & Setup Prerequisites
+Required Software
 - PICSimLab 0.9.2 (241005 Win64)
 - Python 3.14.2
 - com0com (virtual serial port driver)
@@ -91,7 +91,7 @@ Ensure virtual serial ports are active
 Run the Python API:
 python api_interface.py
 
-📊 System Architecture
+# 📊 System Architecture
 Pin Configuration
 Board #1 (PIC16F877A)
 RA0: LM35 Temperature Sensor (Analog)
@@ -110,22 +110,22 @@ RC6/RC7: UART (TX/RX)
 RD0-RD7: LCD Data
 RE0-RE1: LCD Control
 
-⚠️ Important Notes
+# ⚠️ Important Notes
 Version Compatibility: Strictly use specified software versions to avoid communication errors
 BMP180 Limitation: Operates at 5V (overload condition) due to simulation constraints
 I2C Implementation: Software bit-banging required for Assembly compatibility
 Demonstration Video: Included in project archive for setup guidance
 
-🚀 Future Enhancements
+# 🚀 Future Enhancements
 PID control algorithm implementation
 ESP8266 integration for IoT connectivity
 Cloud-based monitoring platform
 Mobile application support
 
-📄 License
+# 📄 License
 This project is developed as an academic assignment for Eskişehir Osmangazi University.
 
-📧 Contact
+# 📧 Contact
 For questions or support, please contact the team members through university channels.
 Course: Introduction to Microcomputers
 Department: Electrical-Electronics & Computer Engineering
