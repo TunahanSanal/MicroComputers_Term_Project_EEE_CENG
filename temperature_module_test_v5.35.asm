@@ -8,8 +8,8 @@
 ; engr.inanyusuf@gmail.com
 
 ;----- NOTES --------
-; DESIRED_TEMP =25 at line 73 you can change
-; Turn MOVWF PORTB comment either at line 115 or at line 178
+; DESIRED_TEMP =25 at line 75 you can change
+; Turn MOVWF PORTB comment either at line 120 or at line 181
 ; Be aware of CLRF TRISB at line 50(just for debug purpose)
 ; All these codes work stably with a 10 MHz oscillator frequency.
 ; Because of delay functions in these codes
@@ -211,4 +211,5 @@ D1_L3
 
 
         END
+
 
