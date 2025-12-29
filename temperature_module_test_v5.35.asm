@@ -2,6 +2,7 @@
 ; TEMPERATURE MODULE TEST CODE
 ; Fan + Temperature + Tachometer (RPS)
 ; PIC16F877A  for Fosc= 10 MHz
+; MPLAB IDE v5.35
 	
 ; Author: Yusuf inan ---- 151220192079
 ; engr.inanyusuf@gmail.com
@@ -12,6 +13,7 @@
 ; Be aware of CLRF TRISB at line 50(just for debug purpose)
 ; All these codes work stably with a 10 MHz oscillator frequency.
 ; Because of delay functions in these codes
+; To test goto line 84 MAIN_LOOP and remove ';' symbol before the function call you want to test 
 ;==================================================
 
         LIST    P=16F877A
@@ -81,11 +83,12 @@ INIT:
 
 MAIN_LOOP:
     
-        CALL READ_TEMPERATURE
-        ;CALL FAN_ON
-	;CALL HEATER_ON
-        ;CALL MEASURE_FAN_RPS
-	
+        ;CALL READ_TEMPERATURE
+        ;CALL CONTROL_TEMP
+		;CALL MEASURE_FAN_RPS
+		;CALL FAN_ON
+		;CALL HEATER_ON
+        
         GOTO MAIN_LOOP
 
 ;--------------------------------------------------
@@ -208,3 +211,4 @@ D1_L3
 
 
         END
+
