@@ -1,3 +1,5 @@
+# Nurefşan Ceren Doğan - 152120211102
+
 import time
 import sys
 import os
@@ -85,4 +87,5 @@ def main():
         print("\nBağlantı kapatıldı. Test Bitti.")
 
 if __name__ == "__main__":
+
     main()
