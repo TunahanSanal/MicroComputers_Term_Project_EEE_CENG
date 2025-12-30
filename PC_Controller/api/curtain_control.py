@@ -1,3 +1,5 @@
+# Nurefşan Ceren Doğan - 152120211102
+
 import time
 import re
 import serial
@@ -150,4 +152,5 @@ class CurtainControlSystemConnection(HomeAutomationSystemConnection):
     def getOutdoorTemp(self) -> float: return self.outdoorTemperature
     def getOutdoorPress(self) -> float: return self.outdoorPressure
     def getLightIntensity(self) -> float: return self.lightIntensity
+
     def isPCControlMode(self) -> bool: return self.pc_control_mode
