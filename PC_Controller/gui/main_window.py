@@ -1,3 +1,5 @@
+# Nurefşan Ceren DOĞAN - 152120211102
+
 import sys
 import os
 
@@ -334,4 +336,5 @@ class SmartHomeApp(ctk.CTk):
 if __name__ == "__main__":
     app = SmartHomeApp()
     app.protocol("WM_DELETE_WINDOW", app.on_closing)
+
     app.mainloop()
