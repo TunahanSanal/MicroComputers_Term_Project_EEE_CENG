@@ -1,3 +1,6 @@
+#Canan MUTLU-152120211092
+
+
 """
 Air Conditioner System Connection
 Handles UART communication with Board #1 (Air Conditioner Control)
@@ -19,7 +22,7 @@ class AirConditionerSystemConnection(HomeAutomationSystemConnection):
         self.ambient_temp = 0.0
         self.fan_speed = 0
         
-        # Hata sayaçları (Stability için)
+        # Hata sayaçları 
         self.read_error_count = 0
         self.max_errors = 3
     
@@ -38,7 +41,7 @@ class AirConditionerSystemConnection(HomeAutomationSystemConnection):
             # 2. Komutu Gönder
             self.serial_connection.write(command_byte)
             
-            # 3. BEKLEME (Simülasyon için yeterli süre)
+            # 3. BEKLEME 
             start_time = time.time()
             while (time.time() - start_time) < timeout:
                 if self.serial_connection.in_waiting > 0:
