@@ -1,3 +1,6 @@
+# Nurefşan Ceren DOĞAN - 152120211102
+
+
 """
 Setup script for Home Automation System
 Optional: Can be used for package installation
@@ -37,4 +40,5 @@ setup(
         ],
     },
 )
+
 
