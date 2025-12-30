@@ -7,17 +7,19 @@
 ; engr.inanyusuf@gmail.com
 
 ;====== NOTES =====================================
-; DESIRED_TEMP =25 at line 108 you can change
-; Turn MOVWF PORTB comment either at line 170 or at line 235
-; Be aware of CLRF TRISB at line 79(just for debug purpose)
+; DESIRED_TEMP =25 at line 112 you can change
+; Turn MOVWF PORTB comments either at lines (192-193,197,198,199,209,210) OR 303(shows fan speed on portb)
+; This code without any manipulation shows the FAN RPS value on PORTB
+; Be aware of CLRF TRISB at line 87(just for debug purpose)
 ; All these codes work stably with a 10 MHz oscillator frequency.
 ; Because of delay functions in these codes
 ; To test goto line 125 MAIN_LOOP and remove ';' symbol before the function call you want to test
 ;==================================================
-;=====NEW VERSION==================================
+;===== NEW VERSION ================================
 ;Timer0 interrupt is used for 1 second timer to calculate RPS
 ;Timer1(RC0) counter is used for RPS count 
 ;HYSTERESIS added to control the FAN more stable
+;0.5 Degree measurement and control is added
 	
 	LIST    P=16F877A
         #include <P16F877A.INC>
@@ -30,14 +32,17 @@
 ; VARIABLES
 ;--------------------------------------------------
         CBLOCK  0x70
-            AMBIENT_TEMP      ; ADC based temperature
-            DESIRED_TEMP      ; Fixed to 25C at line 62
+            AMBIENT_TEMP_INT      ; ADC based temperature
+	    AMBIENT_TEMP_FRAC      ; ADC based temperature
+            DESIRED_TEMP_INT      ; Fixed to 25C at line 62
+	    DESIRED_TEMP_FRAC
 	    FAN_OFF_TEMP      ;(HEATER_ON_TEMP) Give us FAN hysteresis. it equals to(DESIRED_TEMP-2)
 	    FAN_ON_TEMP	      ;(HEATER_OFF_TEMP)Give us FAN hysteresis. it equals to(DESIRED_TEMP+2)
             FAN_RPS           ; Tach result (RPS)
-	    
+	    ADC_L
+	    ADC_H
 	    ACQ_DELAY
-	    T0_CNT		; Timer0 overflow counter(When this hit to 38, 1 sec is passed )
+	    T0_CNT		; Timer0 overflow counter(When this hit to 38, 1 sec is passed at 10MHz )
             ONE_SEC_FLAG	; 1 second elapsed flag
 	    DLY1	        ;FOR 1 SECOND DELAY SUBROUTINE
 	    DLY2		;FOR 1 SECOND DELAY SUBROUTINE
@@ -81,15 +86,14 @@ INIT:
         ; RA0 = Analog input
         BSF TRISA, 0 
 	
-	CLRF TRISB ;JUST FOR DEBUG TEMPERATURE AND FAN SPEED WITH PORTB
+	;CLRF TRISB ;JUST FOR DEBUG TEMPERATURE AND FAN SPEED WITH PORTB
 	
-        
         BSF TRISC, 0	;TACHOMETER INPUT (T1CKI)Timer1 clock in
 	BCF TRISC,5     ;HEATER (OUTPUT)
         BCF TRISC, 2    ;COOLER (OUTPUT)
-	
+	BANKSEL ADCON1
         ; ADC config (AN0 analog)
-        MOVLW b'00001110'   ;left justified
+        MOVLW b'10001110'   ;right justified
         MOVWF ADCON1	    ;only RA0 Analog INPUT, others are DIGITAL
 			    ;+Vref=VDD -Vref=VSS
 	BANKSEL T1CON
@@ -100,18 +104,21 @@ INIT:
 
         BANKSEL ADCON0	    ;RAM Bank0 is selected
 	
-	
         MOVLW b'10000001'   ;Fosc/32, RA0 is seleted as ADC Channel
         MOVWF ADCON0	    ;GO=0, ADON=1 (ADC IS ACTIVE)
-
+	
+	BANKSEL DESIRED_TEMP_INT 
         ; Fixed set temperature = 25
         MOVLW d'25'
-        MOVWF DESIRED_TEMP	    ;DESIRED TEMPERATURE	    
-	DECF DESIRED_TEMP,W
-	DECF DESIRED_TEMP,W
+        MOVWF DESIRED_TEMP_INT	    ;DESIRED TEMPERATURE	    
+	DECF DESIRED_TEMP_INT,W
+	DECF DESIRED_TEMP_INT,W
+	
+	BANKSEL FAN_OFF_TEMP
 	MOVWF FAN_OFF_TEMP
-	INCF DESIRED_TEMP,W
-	INCF DESIRED_TEMP,W
+	INCF DESIRED_TEMP_INT,W
+	INCF DESIRED_TEMP_INT,W
+	BANKSEL FAN_ON_TEMP
 	MOVWF FAN_ON_TEMP
 	
 	;HEATER AND COOLER INITIAL STATES
@@ -123,19 +130,21 @@ INIT:
 ;		MAIN LOOP
 ;=============================================================================
 MAIN_LOOP:
-
+			
+    ;CALL FAN_ON
+    ;CALL HEATER_ON
+    CALL READ_TEMPERATURE
+    CALL CONTROL_TEMP
+    
     BTFSS ONE_SEC_FLAG, 0   ; is 1 second passed
     GOTO MAIN_LOOP          ; NO, GOTO MAIN_LOOP
 
     ; --- YES, 1 Second passed. Do below block----
     BCF ONE_SEC_FLAG, 0     ; flag’i temizle
-
-    	;CALL READ_TEMPERATURE
-	;CALL CONTROL_TEMP
-	CALL FAN_ON
-	;CALL HEATER_ON
-	CALL MEASURE_FAN_RPS
-	CLRF TMR1L
+	
+    CALL MEASURE_FAN_RPS
+	
+	CLRF TMR1L  ;TMR1L keeps rps count and need to be cleared after every second
 	CLRF TMR1H
 	
     GOTO MAIN_LOOP
@@ -148,6 +157,7 @@ READ_TEMPERATURE:
     
     ;---- ADC ACQUISITION DELAY ---
     MOVLW .100
+    BANKSEL ACQ_DELAY
     MOVWF ACQ_DELAY
 LABEL:
     NOP
@@ -162,62 +172,120 @@ WAIT_ADC:
         GOTO WAIT_ADC
 
         ; ADC CONVERSION RESULT IS ON ADRESH and ADRESL registers
-	; ADC RESULT WAS LEFT JUSTIFIED MOST SIGNIFICANT BYTE IS ON ADRESH
-        MOVF ADRESH, W	
-        ADDWF ADRESH, W      ; x2 (TURNS ADC VALUE INTO CELCIOUS) 
-        MOVWF AMBIENT_TEMP   ; LOADS THE VALUE TO AMBIENT_TEMP 
+	; ADC RESULT WAS RIGHT JUSTIFIED MOST SIGNIFICANT 2 BITS IS ON ADRESH
+        BANKSEL ADRESL
+	MOVF ADRESL,W
+	BANKSEL ADC_L
+	MOVWF ADC_L
+	BANKSEL ADRESH
+	MOVF ADRESH,W
+	BANKSEL ADC_H
+	MOVWF ADC_H
 	
-	MOVWF PORTB ; JUST FOR DEBUG PURPOSE
+	BCF STATUS,C
+	RRF ADC_H, F
+	RRF ADC_L, F
 	
+	MOVF ADC_L,W
+	BANKSEL AMBIENT_TEMP_INT
+	MOVWF AMBIENT_TEMP_INT
+	;BANKSEL PORTB		 ; JUST FOR DEBUG PURPOSE
+	;MOVWF PORTB		 ; JUST FOR DEBUG PURPOSE
+	BANKSEL AMBIENT_TEMP_FRAC
+	CLRF AMBIENT_TEMP_FRAC
+	
+	;MOVF AMBIENT_TEMP_FRAC,W ; JUST FOR DEBUG PURPOSE
+	;BANKSEL PORTB		 ; JUST FOR DEBUG PURPOSE
+	;MOVWF PORTB		 ; JUST FOR DEBUG PURPOSE
+	
+	BTFSC STATUS,C
+	GOTO SET_HALF_DEG
+	RETURN
+	
+SET_HALF_DEG:
+	BANKSEL AMBIENT_TEMP_FRAC
+	MOVLW d'5'
+	MOVWF AMBIENT_TEMP_FRAC
+	;BANKSEL PORTB		 ; JUST FOR DEBUG PURPOSE
+	;MOVWF PORTB		 ; JUST FOR DEBUG PURPOSE
+
         RETURN
 	
-;==============================================================================
-; TEMPERATURE CONTROL LOGIC
-;==============================================================================
-CONTROL_TEMP:
-	
-	;By adding Hysteresis, make more stable FAN control around DESIRED_TEMP 
-	
-        ;--- FAN ON CONTROL ---
-        BANKSEL AMBIENT_TEMP
-        MOVF    AMBIENT_TEMP, W
-        BANKSEL FAN_ON_TEMP
-        SUBWF   FAN_ON_TEMP, W       ; FAN_ON_TEMP(DESIRED_TEMP+2) - AMBIENT
 
-        BTFSS   STATUS,0             ; C=0 → AMBIENT >= FAN_ON
+;==============================================================================
+; TEMPERATURE CONTROL LOGIC (0.5°C supported)
+;==============================================================================
+
+CONTROL_TEMP:
+
+;--------------------------------------------------
+; FAN ON CONTROL  (AMBIENT > FAN_ON_TEMP)
+;--------------------------------------------------
+        BANKSEL AMBIENT_TEMP_INT
+        MOVF    AMBIENT_TEMP_INT, W
+        BANKSEL FAN_ON_TEMP
+        SUBWF   FAN_ON_TEMP, W      ; FAN_ON_TEMP - AMBIENT
+
+        BTFSS   STATUS, C           ; C=0 → AMBIENT > FAN_ON_TEMP
         GOTO    FAN_ON
 
-        ;--- FAN OFF CONTROL ---
-        BANKSEL AMBIENT_TEMP
-        MOVF    AMBIENT_TEMP, W
-        BANKSEL FAN_OFF_TEMP
-        SUBWF   FAN_OFF_TEMP, W      ; FAN_OFF_TEMP(DESIRED_TEMP-2) - AMBIENT
+        BTFSS   STATUS, Z           ; INT not equal → continue
+        GOTO    CHECK_FAN_OFF
 
-        BTFSC   STATUS,0             ; C=1 → FAN_OFF =>AMBIENT 
+        ; INT EQUAL → FRAC CONTROL
+        BANKSEL AMBIENT_TEMP_FRAC
+        MOVF    AMBIENT_TEMP_FRAC, W
+        BTFSC   STATUS, Z           ; FRAC = 0.0
+        GOTO    CHECK_FAN_OFF
+
+        ; FRAC = 0.5 → FAN_ON
+        GOTO    FAN_ON
+
+
+;--------------------------------------------------
+; FAN OFF / HEATER ON CONTROL
+;--------------------------------------------------
+CHECK_FAN_OFF:
+        BANKSEL AMBIENT_TEMP_INT
+        MOVF    AMBIENT_TEMP_INT, W
+        BANKSEL FAN_OFF_TEMP
+        SUBWF   FAN_OFF_TEMP, W     ; FAN_OFF_TEMP - AMBIENT
+
+        BTFSC   STATUS, C           ; C=1 → AMBIENT < FAN_OFF_TEMP
         GOTO    HEATER_ON
 
-        
+        BTFSS   STATUS, Z           ; INT not equal → ALL_OFF
         GOTO    ALL_OFF
-; --- FAN ON, AMBIENT IS TOO HOT ---
+
+        ; INT equal → FRAC control
+        BANKSEL AMBIENT_TEMP_FRAC
+        MOVF    AMBIENT_TEMP_FRAC, W
+        BTFSC   STATUS, Z           ; FRAC = 0.0 → HEATER_ON
+        GOTO    HEATER_ON
+
+        ; FRAC = 0.5 → ALL_OFF
+        GOTO    ALL_OFF
+
+
+;--------------------------------------------------
+; OUTPUT STATES
+;--------------------------------------------------
 FAN_ON:
         BANKSEL PORTC
-        BCF     PORTC, 5    ;HEATER OFF
-        BSF     PORTC, 2    ;FAN ON
+        BCF     PORTC, 5    ; HEATER OFF
+        BSF     PORTC, 2    ; FAN ON
         RETURN
 
-	
-; --- HEATER ON, AMBIENT IS TOO COLD ---	
 HEATER_ON:
         BANKSEL PORTC
-        BSF     PORTC, 5    ;HEATER ON
-        BCF     PORTC, 2    ;FAN OFF
+        BSF     PORTC, 5    ; HEATER ON
+        BCF     PORTC, 2    ; FAN OFF
         RETURN
-	
-; --- AMBIENT TEMPERATURE IS GOOD ---
+
 ALL_OFF:
         BANKSEL PORTC
-        BCF     PORTC, 5    ;HEATER OFF
-        BCF     PORTC, 2    ;FAN OFF
+        BCF     PORTC, 5
+        BCF     PORTC, 2
         RETURN
 
 ;--------------------------------------------------
@@ -232,7 +300,7 @@ MEASURE_FAN_RPS:
 
         BANKSEL PORTB
         MOVF    FAN_RPS, W
-        MOVWF   PORTB             ; DEBUG
+        MOVWF   PORTB            ; JUST FOR DEBUG PURPOSE
 
         RETURN
 
