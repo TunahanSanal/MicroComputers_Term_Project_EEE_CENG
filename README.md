@@ -3,9 +3,9 @@ A comprehensive microcontroller-based home automation project developed using PI
 
 # 📋 Project Overview
 This project implements a dual-board home automation system that manages:
-Board #1: Air conditioning system with temperature control
-Board #2: Automated curtain control based on light intensity
-The system operates in both autonomous and manual modes, providing flexible control through a Python-based API interface.
+- Board #1: Air conditioning system with temperature control
+- Board #2: Automated curtain control based on light intensity
+- The system operates in both autonomous and manual modes, providing flexible control through a Python-based API interface.
 
 # 👥 Team Members
 - 151220212123, Yiğit DOMBAYLI, Electrical & Electronics Engineering
